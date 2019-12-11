@@ -21,7 +21,7 @@
           (printf "The funtion ~a is incorrect at: ~a\n" function n)))))
 
 
-(load "../../library/ndigits.ss")
+(load "../../library/Scheme/ndigits.ss")
 
 (define benchmark
   (lambda (function)

@@ -1,3 +1,8 @@
+;;; Chez's built-in logarithm function
+;;; is quite slow for big integers, so I
+;;; written the following logarithm function
+;;; to compute (log base n) approximately.
+
 (define logarithm
   (lambda (base n)
     (let ([binary-length (integer-length n)])

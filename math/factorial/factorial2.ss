@@ -1,5 +1,5 @@
 (load "vector-mul.ss")
-(load "../../library/bitvector.ss")
+(load "../../library/Scheme/bitvector.ss")
 
 (define factorial2
   (lambda (maxn)

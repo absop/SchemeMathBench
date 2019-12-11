@@ -45,6 +45,9 @@
           (loop (1- n) (+ u v) u)))))
 
 
+; #!eof
+(load "../../library/Scheme/ndigits.ss")
+
 (define print-eval
   (lambda (function min max)
     (let loop ([n min])
@@ -61,7 +64,6 @@
           (if (< i n) (loop (1+ i)) #t)
           i))))
 
-(load "../library/ndigits.ss")
 
 ; (print-eval 'fibonacci 0 100)
 ; (print-eval 'fibonacci-recursion 0 100)
