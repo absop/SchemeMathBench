@@ -1,4 +1,4 @@
-(load "../library/bitvector.ss")
+(load "../../library/bitvector.ss")
 ; (load "bitvector.ss")
 
 (define get-primes

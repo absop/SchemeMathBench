@@ -1,1 +1,0 @@
-(compile-file "syntax.ss")  
