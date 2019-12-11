@@ -1,7 +1,7 @@
-// gcc -O3 -fPIC -shared -o get-primes-int32-vector.so get-primes-int32-vector.c
 #include <math.h>
-#include "bitvector.c"
-#include "vector.c"
+#include "../../../library/C/bitvector.c"
+#include "../../../library/C/vector.c"
+
 
 int32_vector_t *eratosthenes(int maxn)
 {

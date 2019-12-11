@@ -1,81 +1,38 @@
-
-(define-syntax for
-  (lambda (x)
-    (syntax-case x (in range : =)
-      [(for k in range(end): expr ...)
-       #'(let ([end* end])
-          (let loop ([k 0])
-            (when (<= k end*)
-                  expr ...
-                  (loop (+ k 1)))))]
-      [(for k = (end): expr ...)
-       #'(let ([end* end])
-          (let loop ([k 0])
-            (when (<= k end*)
-                  expr ...
-                  (loop (+ k 1)))))]
-
-      [(for k in range(start end): expr ...)
-       #'(let ([end* end])
-          (let loop ([k start])
-            (when (<= k end*)
-                  expr ...
-                  (loop (+ k 1)))))]
-      [(for k = (start end): expr ...)
-       #'(let ([end* end])
-          (let loop ([k start])
-            (when (<= k end*)
-                  expr ...
-                  (loop (+ k 1)))))]
-
-      [(for k in range(start end step): expr ...)
-       #'(let ([end* end][step* step]
-               [op (if (> step 0) <= >=)])
-          (let loop ([k start])
-            (when (op k end*)
-                  expr ...
-                  (loop (+ k step*)))))]
-      [(for k = (start end step): expr ...)
-       #'(let ([end* end][step* step]
-               [op (if (> step 0) <= >=)])
-          (let loop ([k start])
-            (when (op k end*)
-                  expr ...
-                  (loop (+ k step*)))))])))
-
+(load "../../../library/Scheme/bitvector.ss")
+(load "../../../library/Scheme/for.ss")
 
 (define eratosthenes
   (lambda (maxn)
-    (let ([mask (make-bytevector (1+ maxn) 1)]
+    (let ([mask (make-bitvector (1+ maxn) 1)]
           [primes (list 2)]
           [sqr (isqrt maxn)])
       (define tail primes)
       (for i in range(3 maxn 2):
-           (when (= 1 (bytevector-u8-ref mask i))
-                 (append! tail (list i))
+           (when (bitvector-ref mask i)
+                 (set-cdr! tail (list i))
                  (set! tail (cdr tail))
                  ; (set! primes (cons i primes))
                  (if (<= i sqr)
                      (for j = ((* i i) maxn (+ i i)):
-                          (bytevector-u8-set! mask j 0)))))
+                          (bitvector-reset! mask j)))))
       ; (reverse! primes)
       primes)))
 
 (define euler
   (lambda (maxn)
-    (let ([mask (make-bytevector (1+ maxn) 1)]
+    (let ([mask (make-bitvector (1+ maxn) 1)]
           [primes (list 2)])
       (define tail primes)
       (for i = (3 maxn 2):
-           (when (= 1 (bytevector-u8-ref mask i))
-                 (append! tail (list i))
+           (when (bitvector-ref mask i)
+                 (set-cdr! tail (list i))
                  (set! tail (cdr tail)))
            (let loop ([head (cdr primes)])
              (if (not (null? head))
                  (let ([index (* i (car head))])
                    (when (<= index maxn)
                          ; (printf "~a\n" index)
-                         (bytevector-u8-set! mask index 0)
+                         (bitvector-reset! mask index)
                          (if (not (= (remainder i (car head)) 0))
                              (loop (cdr head))))))))
       primes)))

@@ -1,5 +1,5 @@
 ; gcc -O3 -fPIC -shared -o bitvector.so bitvector.c
-(load-shared-object "bitvector.so")
+(load-shared-object "../../../library/C/bitvector.so")
 
 (define-ftype bitvector
               (struct

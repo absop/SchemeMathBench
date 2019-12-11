@@ -1,7 +1,6 @@
-// gcc -O3 -fPIC -shared -o get-primes-linked-list.so get-primes-linked-list.c
 #include <math.h>
-#include "bitvector.c"
-#include "linked-list.c"
+#include "../../../library/C/bitvector.c"
+#include "../../../library/C/linked-list.c"
 
 
 list_t *eratosthenes(int maxn)

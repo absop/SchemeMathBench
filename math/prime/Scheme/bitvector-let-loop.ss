@@ -1,5 +1,4 @@
-(load "../../library/bitvector.ss")
-; (load "bitvector.ss")
+(load "../../../library/Scheme/bitvector.ss")
 
 (define get-primes
   (lambda (maxn)

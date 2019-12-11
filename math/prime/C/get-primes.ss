@@ -1,4 +1,3 @@
-; gcc -O3 -fPIC -shared -o xxx.so xxx.c
 (eval-when (compile) (optimize-level 3))
 
 (define-ftype linked-list
