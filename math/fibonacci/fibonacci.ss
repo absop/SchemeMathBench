@@ -76,22 +76,23 @@
             (loop (1+ i))))
     (newline)))
 
-(define fequal?
-  (lambda (f1 f2 n)
-    (let loop ([i 0])
-      (assert (= (f1 i) (f2 i)))
-      (if (<= i n)
-          (loop (1+ i))))))
+(let ([maxn 1000])
+  (let loop ([i 0])
+    (assert
+      (apply = (map (lambda (proc) (proc i))
+                    (list
+                      fibonacci
+                      fibonacci-memoized
+                      fibonacci-ordinay-loop
+                      fibonacci-ordinay-tail-recursion
+                      ))))
+    (if (<= i maxn)
+        (loop (1+ i)))))
 
 
 ; (print-eval 'fibonacci 0 100)
 ; (print-eval 'fibonacci-recursion 0 100)
 ; (print-eval 'fibonacci-ordinay-loop 0 100)
-
-(fequal? fibonacci fibonacci-recursion 100)
-(fequal? fibonacci fibonacci-ordinay-loop 100)
-(fequal? fibonacci fibonacci-ordinay-tail-recursion 100)
-(fequal? fibonacci fibonacci-memoized 100)
 
 (time (fibonacci 1000000))
 (time (fibonacci-recursion 1000000))
