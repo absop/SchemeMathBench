@@ -34,15 +34,15 @@
 
 (load "memoize.ss")
 
-(mdef fibonacci-memoized
-      (lambda (n)
-        (if (> n 1)
-            (let ([u (fibonacci-memoized (1- (fxdiv n 2)))]
-                  [v (fibonacci-memoized (fxdiv n 2))])
-              (if (odd? n)
-                  (let ([u (+ u v)]) (+ (* u u) (* v v)))
-                  (* v (+ v (* 2 u)))))
-            n)))
+(function fibonacci-memoized
+          (lambda (n)
+            (if (> n 1)
+                (let ([u (fibonacci-memoized (1- (fxdiv n 2)))]
+                      [v (fibonacci-memoized (fxdiv n 2))])
+                  (if (odd? n)
+                      (let ([u (+ u v)]) (+ (* u u) (* v v)))
+                      (* v (+ v (* 2 u)))))
+                n)))
 
 ;;; fibonacci-ordinay-loop
 (define fibonacci-ordinay-loop
@@ -68,30 +68,30 @@
 (load "../../library/Scheme/ndigits.ss")
 
 (define print-eval
-  (lambda (function min max)
-    (let loop ([n min])
-      (if (<= n max)
-          (let ([val ((eval function) n)])
-            (printf "~a(~a) = ~a\n" function n val)
-            (loop (1+ n)))
-          (newline)))))
+  (lambda (symbol min max)
+    (define f (eval symbol))
+    (let loop ([i min])
+      (when (<= i max)
+            (printf "~a(~a) = ~a\n" symbol i (f i))
+            (loop (1+ i))))
+    (newline)))
 
-(define function-equal?
+(define fequal?
   (lambda (f1 f2 n)
-    (let loop ([i 1])
-      (if (= (f1 i) (f2 i))
-          (if (< i n) (loop (1+ i)) #t)
-          i))))
+    (let loop ([i 0])
+      (assert (= (f1 i) (f2 i)))
+      (if (<= i n)
+          (loop (1+ i))))))
 
 
 ; (print-eval 'fibonacci 0 100)
 ; (print-eval 'fibonacci-recursion 0 100)
 ; (print-eval 'fibonacci-ordinay-loop 0 100)
 
-(printf "~a\n"(function-equal? fibonacci fibonacci-recursion 100))
-(printf "~a\n"(function-equal? fibonacci fibonacci-ordinay-loop 100))
-(printf "~a\n"(function-equal? fibonacci fibonacci-ordinay-tail-recursion 100))
-(printf "~a\n"(function-equal? fibonacci fibonacci-memoized 100))
+(fequal? fibonacci fibonacci-recursion 100)
+(fequal? fibonacci fibonacci-ordinay-loop 100)
+(fequal? fibonacci fibonacci-ordinay-tail-recursion 100)
+(fequal? fibonacci fibonacci-memoized 100)
 
 (time (fibonacci 1000000))
 (time (fibonacci-recursion 1000000))
