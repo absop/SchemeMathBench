@@ -1,0 +1,4 @@
+LIBRARY tfib.so
+
+EXPORTS
+tfib
