@@ -1,6 +1,6 @@
 #!/usr/bin/scheme --script
 
-(define fibonacci
+(define fibonacci-iteration1
   (lambda (n)
     (define iterations
       (lambda (i)
@@ -21,28 +21,73 @@
                 (iter0 x y))))
         n)))
 
+(define fibonacci-iteration2
+  (lambda (n)
+    (define (iterate x y i)
+      (let ([x^2 (* x x)] [y^2 (* y y)]
+            [g (if (logbit? i n) -2 2)]
+            [j (- i 1)])
+        (let ([y (+ (- (* y^2 4) x^2) g)])
+          (if (<= j 0)
+              (if (odd? n)
+                  y
+                  (- y (+ x^2 y^2)))
+              (let ([x (+ x^2 y^2)])
+                (if (logbit? j n)
+                    (iterate (- y x) y j)
+                    (iterate x (- y x) j)))))))
+    (if (< n 2)
+        n
+        (iterate 0 1 (- (integer-length n) 1)))))
 
 (define fibonacci-recursion
   (lambda (n)
     (if (> n 1)
-        (let ([u (fibonacci-recursion (1- (fxdiv n 2)))]
-              [v (fibonacci-recursion (fxdiv n 2))])
-          (if (odd? n)
-              (let ([u (+ u v)]) (+ (* u u) (* v v)))
-              (* v (+ v (* 2 u)))))
+        (let ([k (fxdiv n 2)])
+          (let ([x (fibonacci-recursion (1- k))]
+                [y (fibonacci-recursion k)])
+            (if (odd? n)
+                (let ([x (+ x y)])
+                  (+ (* x x) (* y y)))
+                (* y (+ y (* 2 x))))))
         n)))
 
 (load "memoize.ss")
 
-(function fibonacci-memoized
+(function fibonacci-memoized1
           (lambda (n)
             (if (> n 1)
-                (let ([u (fibonacci-memoized (1- (fxdiv n 2)))]
-                      [v (fibonacci-memoized (fxdiv n 2))])
-                  (if (odd? n)
-                      (let ([u (+ u v)]) (+ (* u u) (* v v)))
-                      (* v (+ v (* 2 u)))))
+                (let ([k (fxdiv n 2)])
+                  (let ([x (fibonacci-memoized1 (1- k))]
+                        [y (fibonacci-memoized1 k)])
+                    (if (odd? n)
+                        (let ([x (+ x y)])
+                          (+ (* x x) (* y y)))
+                        (* y (+ y (* 2 x))))))
                 n)))
+
+(function fib2-memoized
+          (lambda (n)
+            (define square (lambda (x) (* x x)))
+            (define return
+              (lambda (xx yy g)
+                (let ([xy (+ xx yy)]
+                      [yx (+ (- (* yy 4) xx) g)])
+                  (if (odd? n)
+                      (cons (- yx xy) yx)
+                      (cons xy (- yx xy))))))
+            (if (< n 2)
+                (cons 0 n)
+                (let ([k (fxdiv n 2)])
+                  (let ([fib2 (fib2-memoized k)])
+                    (return (square (car fib2))
+                            (square (cdr fib2))
+                            (if (odd? k) -2 2))))
+                )))
+
+(define fibonacci-memoized2
+  (lambda (n)
+    (cdr (fib2-memoized n))))
 
 ;;; fibonacci-ordinay-loop
 (define fibonacci-ordinay-loop
@@ -65,7 +110,7 @@
 
 
 ; #!eof
-(load "../../library/Scheme/ndigits.ss")
+; (load "../../library/Scheme/ndigits.ss")
 
 (define print-eval
   (lambda (symbol min max)
@@ -76,34 +121,46 @@
             (loop (1+ i))))
     (newline)))
 
-(let ([maxn 1000])
-  (let loop ([i 0])
-    (assert
-      (apply = (map (lambda (proc) (proc i))
-                    (list
-                      fibonacci
-                      fibonacci-memoized
-                      fibonacci-ordinay-loop
-                      fibonacci-ordinay-tail-recursion
-                      ))))
-    (if (<= i maxn)
-        (loop (1+ i)))))
+(define test
+  (lambda (funcnames maxn)
+    (let ([functions (map eval funcnames)])
+      (let loop ([i 0])
+        (assert (apply = (map (lambda (f) (f i)) functions)))
+        (if (<= i maxn)
+            (loop (1+ i)))))))
+
+(define bench
+  (lambda (funcnames numbers)
+    (let loop ([numbers numbers])
+      (if (not (null? numbers))
+          (let ([number (car numbers)])
+            (let loop ([funcnames funcnames])
+              (if (not (null? funcnames))
+                  (let ([funcname (car funcnames)])
+                    (printf "~s(~a)\n" funcname number)
+                    (time ((eval funcname) number))
+                    (printf "\n")
+                    (loop (cdr funcnames)))))
+            (loop (cdr numbers))))
+      )))
+
+(define fast-fibonacci-funcnames
+  '(fibonacci-iteration1
+    fibonacci-iteration2
+    fibonacci-memoized1
+    fibonacci-memoized2
+    fibonacci-recursion))
+
+(define ordinary-fibonacci-funcnames
+  '(fibonacci-ordinay-loop
+    fibonacci-ordinay-tail-recursion))
 
 
-; (print-eval 'fibonacci 0 100)
-; (print-eval 'fibonacci-recursion 0 100)
-; (print-eval 'fibonacci-ordinay-loop 0 100)
+(test (append fast-fibonacci-funcnames
+              ordinary-fibonacci-funcnames)
+      1000)
+(bench fast-fibonacci-funcnames '(1000000 1000001 1000000))
 
-(time (fibonacci 1000000))
-(time (fibonacci-recursion 1000000))
-(time (fibonacci-memoized 1000000))
-(time (fibonacci 1000001))
-(time (fibonacci-recursion 1000001))
-(time (fibonacci-memoized 1000001))
-(time (fibonacci-memoized 1000000))
+
 (time (fibonacci-ordinay-loop 100000))
 (time (fibonacci-ordinay-tail-recursion 100000))
-
-
-; (time (fibonacci 10000000))
-; (time (fibonacci-memoized 10000000))
