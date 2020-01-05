@@ -32,7 +32,7 @@
       [(n base) ($ndigits n base)])))
 
 #!eof
-(load "for-loop.ss")
+(load "for.ss")
 
-(for i from 1 to 101
+(for i in range(100):
      (printf "ndigits(~a)  = ~a\n" i (ndigits i)))
