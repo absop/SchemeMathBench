@@ -39,13 +39,19 @@ int32_vector_t *euler(int maxn)
         if (bitvector_ref(mask, i)) {
             int32_vector_append(primes, i);
             // primes->data[primes->length++] = i;
-        }
-        p = primes->data;
-        end = p + primes->length;
-        for (; p < end && (index = i * *p) <= maxn; ++p) {
-            bitvector_reset(mask, index);
-            if (i % *p == 0)
-                break;
+            p = primes->data;
+            end = p + primes->length;
+            for (; p < end && (index = i * *p) <= maxn; ++p) {
+                bitvector_reset(mask, index);
+            }
+        } else {
+            p = primes->data;
+            end = p + primes->length;
+            for (; p < end && (index = i * *p) <= maxn; ++p) {
+                bitvector_reset(mask, index);
+                if (i % *p == 0)
+                    break;
+            }
         }
     }
     bitvector_free(mask);

@@ -37,14 +37,21 @@ list_t *euler(int maxn)
         if (bitvector_ref(mask, i)) {
             append(tail, i);
             tail = tail->next;
-        }
-        for (head = primes; head; head = head->next) {
-            p = head->this;
-            index = i * p;
-            if (index > maxn) break;
-            bitvector_reset(mask, index);
-            if (i % p == 0)
-                break;
+            for (head = primes; head; head = head->next) {
+                p = head->this;
+                index = i * p;
+                if (index > maxn) break;
+                bitvector_reset(mask, index);
+            }
+        } else {
+            for (head = primes; head; head = head->next) {
+                p = head->this;
+                index = i * p;
+                if (index > maxn) break;
+                bitvector_reset(mask, index);
+                if (i % p == 0)
+                    break;
+            }
         }
     }
     bitvector_free(mask);

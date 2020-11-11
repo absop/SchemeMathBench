@@ -8,7 +8,7 @@
       (define tail primes)
       (for i in range(3 maxn 2):
            (when (= 1 (bytevector-u8-ref mask i))
-                 (append! tail (list i))
+                 (set-cdr! tail (list i))
                  (set! tail (cdr tail))
                  ; (set! primes (cons i primes))
                  (if (<= i sqr)
@@ -23,17 +23,25 @@
           [primes (list 2)])
       (define tail primes)
       (for i = (3 maxn 2):
-           (when (= 1 (bytevector-u8-ref mask i))
-                 (append! tail (list i))
-                 (set! tail (cdr tail)))
-           (let loop ([head (cdr primes)])
-             (if (not (null? head))
-                 (let ([index (* i (car head))])
-                   (when (<= index maxn)
-                         ; (printf "~a\n" index)
-                         (bytevector-u8-set! mask index 0)
-                         (if (not (= (remainder i (car head)) 0))
-                             (loop (cdr head))))))))
+           (if (= 1 (bytevector-u8-ref mask i))
+               (begin
+                 (set-cdr! tail (list i))
+                 (set! tail (cdr tail))
+                 (let loop ([head (cdr primes)])
+                   (if (not (null? head))
+                       (let ([index (* i (car head))])
+                         (when (<= index maxn)
+                               ; (printf "~a\n" index)
+                               (bytevector-u8-set! mask index 0)
+                               (loop (cdr head)))))))
+               (let loop ([head (cdr primes)])
+                 (if (not (null? head))
+                     (let ([index (* i (car head))])
+                       (when (<= index maxn)
+                             ; (printf "~a\n" index)
+                             (bytevector-u8-set! mask index 0)
+                             (if (not (= (remainder i (car head)) 0))
+                                 (loop (cdr head)))))))))
       primes)))
 
 (define get-primes
@@ -62,26 +70,28 @@
 #!eof
 (2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97)
 (2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97)
+eratosthenes sieving:
 (time (set! primes ...))
     11 collections
-    1.953125000s elapsed cpu time, including 0.234375000s collecting
-    1.966224800s elapsed real time, including 0.226511400s collecting
-    192190416 bytes allocated, including 516096 bytes reclaimed
+    2.171875000s elapsed cpu time, including 0.265625000s collecting
+    2.168144300s elapsed real time, including 0.270355500s collecting
+    192190416 bytes allocated, including 982480 bytes reclaimed
 (time (set! number ...))
     no collections
     0.015625000s elapsed cpu time
-    0.012362700s elapsed real time
+    0.014676700s elapsed real time
     0 bytes allocated
-5761455
+5761455 primes
+euler sieving:
 (time (set! primes ...))
     11 collections
-    2.046875000s elapsed cpu time, including 0.312500000s collecting
-    2.042748200s elapsed real time, including 0.305687800s collecting
-    192190352 bytes allocated, including 100041936 bytes reclaimed
+    1.859375000s elapsed cpu time, including 0.343750000s collecting
+    1.899278200s elapsed real time, including 0.341237100s collecting
+    192190352 bytes allocated, including 100042432 bytes reclaimed
 (time (set! number ...))
     no collections
     0.015625000s elapsed cpu time
-    0.013300300s elapsed real time
+    0.014911600s elapsed real time
     0 bytes allocated
-5761455
-[Finished in 4.3s]
+5761455 primes
+[Finished in 4.4s]
