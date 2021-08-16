@@ -1,87 +1,126 @@
 (eval-when (compile) (optimize-level 3))
 
-(define-ftype linked-list
-              (struct
-                [this integer-64]
-                [next (* linked-list)]))
 
-(define-ftype int32-vector
-              (struct
-                [alloced integer-64]
-                [_length integer-64]
-                [data (* integer-32)]))
+(define-syntax benchmark
+  (syntax-rules ()
+    [(_ times limit prefix)
+     (let ()
+       (load (format "get-primes-~a.ss" 'prefix))
+       (let ()
+         (define (bench siever)
+           (let ([result '()])
+             (for-each
+               (lambda (i) (set! result (siever limit)))
+               (iota times))
+             result))
 
+         (define-syntax bench-siever
+           (lambda (x)
+             (define (join-name prefix suffix)
+               (datum->syntax prefix
+                 (string->symbol
+                   (format "~a:~a"
+                     (syntax->datum prefix)
+                     (syntax->datum suffix)))))
+             (syntax-case x ()
+               [(_ siever)
+                (with-syntax ([alias (join-name #'prefix #'siever)])
+                  #'(let ([alias siever])
+                      (collect)
+                      (let ([primes (time (bench alias))])
+                        (display (count primes))
+                        (newline)
+                        (free primes))))])))
 
-(define get-primes
-  (let* ([env (make-hash-table)]
-         [put (lambda (key value) (put-hash-table! env key value))]
-         [get (lambda (key) (get-hash-table env key 'undefined))]
-         [get-primes
-          (lambda (algorithm ds n)
-            (let ([f (get (string->symbol (format "~a-~a" ds algorithm)))]
-                  [t (get (string->symbol (format "~a->~a" ds 'vector)))])
-              (t (f n))))])
-    (load-shared-object "get-primes-linked-list.so")
-    (put 'linked-list-eratosthenes
-         (foreign-procedure "eratosthenes" (int) (* linked-list)))
-    (put 'linked-list-euler
-         (foreign-procedure "euler" (int) (* linked-list)))
-    (put 'linked-list-length
-         (foreign-procedure "list_length" ((* linked-list)) integer-64))
-    (put 'linked-list-free!
-         (foreign-procedure "list_free" ((* linked-list)) void))
-
-    (load-shared-object "get-primes-int32-vector.so")
-    (put 'int32-vector-eratosthenes
-         (foreign-procedure "eratosthenes" (int) (* int32-vector)))
-    (put 'int32-vector-euler
-         (foreign-procedure "euler" (int) (* int32-vector)))
-    (put 'int32-vector-length
-         (foreign-procedure "int32_vector_length" ((* int32-vector)) integer-64))
-    (put 'int32-vector-free!
-         (foreign-procedure "int32_vector_free" ((* int32-vector)) void))
-
-    (put 'linked-list->vector
-         (lambda (ll)
-           (define v (make-vector ((get 'linked-list-length) ll)))
-           (let loop ([head ll][i 0])
-             (when (not (= (ftype-pointer-address head) 0))
-                   (vector-set! v i (ftype-ref linked-list (this) head))
-                   (loop (ftype-ref linked-list (next) head)
-                         (1+ i))))
-           ((get 'linked-list-free!) ll)
-           v))
-    (put 'int32-vector->vector
-         (lambda (i32v)
-           (define l ((get 'int32-vector-length) i32v))
-           (define v (make-vector l))
-           (let loop ([i 0])
-             (when (< i l)
-                   (vector-set! v i (ftype-ref int32-vector (data i) i32v))
-                   (loop (1+ i))))
-           ((get 'int32-vector-free!) i32v)
-           v))
-
-    (case-lambda
-      [(n) (get-primes 'eratosthenes 'int32-vector n)]
-      [(n algorithm) (get-primes algorithm 'int32-vector n)]
-      [(n algorithm ds) (get-primes algorithm ds n)])))
+         (printf "bench with times: ~a, limit: ~a\n" times limit)
+         (bench-siever eratosthenes)
+         (bench-siever euler)))]))
 
 
-(define MAXN)
-(define benchmark
-  (lambda (algorithm ds)
-    (time (set! p100 (get-primes 100 algorithm ds)))
-    (time (set! primes (get-primes MAXN algorithm ds)))
-    (printf "~a-~a:\n" ds algorithm)
-    (printf "\t~a\n" p100)
-    (printf "\t~a\n" (vector-length primes))))
+(benchmark 10 100000000 linked-list)
+(benchmark 10 100000000 int32-vector)
 
+#!eof
+bench with times: 10, limit: 10000000
+(time (bench linked-list:eratosthenes))
+    no collections
+    0.843750000s elapsed cpu time
+    0.830860200s elapsed real time
+    368 bytes allocated
+664579
+(time (bench linked-list:euler))
+    no collections
+    1.000000000s elapsed cpu time
+    1.019607600s elapsed real time
+    368 bytes allocated
+664579
+bench with times: 10, limit: 10000000
+(time (bench int32-vector:eratosthenes))
+    no collections
+    0.343750000s elapsed cpu time
+    0.344785400s elapsed real time
+    368 bytes allocated
+664579
+(time (bench int32-vector:euler))
+    no collections
+    0.593750000s elapsed cpu time
+    0.605894400s elapsed real time
+    368 bytes allocated
+664579
+[Finished in 3.2s]
 
-(set! MAXN 100000000)
-(benchmark 'euler 'linked-list)
-(benchmark 'euler 'int32-vector)
-(benchmark 'eratosthenes 'linked-list)
-(benchmark 'eratosthenes 'int32-vector)
+bench with times: 1, limit: 100000000
+(time (bench linked-list:eratosthenes))
+    no collections
+    1.234375000s elapsed cpu time
+    1.273648800s elapsed real time
+    80 bytes allocated
+5761455
+(time (bench linked-list:euler))
+    no collections
+    1.000000000s elapsed cpu time
+    1.018657800s elapsed real time
+    80 bytes allocated
+5761455
+bench with times: 1, limit: 100000000
+(time (bench int32-vector:eratosthenes))
+    no collections
+    0.796875000s elapsed cpu time
+    0.811919400s elapsed real time
+    80 bytes allocated
+5761455
+(time (bench int32-vector:euler))
+    no collections
+    0.687500000s elapsed cpu time
+    0.695423000s elapsed real time
+    80 bytes allocated
+5761455
+[Finished in 4.9s]
 
-; (compile-file "get-primes.ss")
+bench with times: 10, limit: 100000000
+(time (bench linked-list:eratosthenes))
+    no collections
+    13.109375000s elapsed cpu time
+    13.555321200s elapsed real time
+    368 bytes allocated
+5761455
+(time (bench linked-list:euler))
+    no collections
+    12.250000000s elapsed cpu time
+    12.413642000s elapsed real time
+    368 bytes allocated
+5761455
+bench with times: 10, limit: 100000000
+(time (bench int32-vector:eratosthenes))
+    no collections
+    7.765625000s elapsed cpu time
+    7.834347600s elapsed real time
+    368 bytes allocated
+5761455
+(time (bench int32-vector:euler))
+    no collections
+    7.750000000s elapsed cpu time
+    7.818697100s elapsed real time
+    368 bytes allocated
+5761455
+[Finished in 42.8s]
