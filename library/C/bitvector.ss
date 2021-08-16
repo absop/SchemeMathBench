@@ -1,10 +1,18 @@
 ; gcc -O3 -fPIC -shared -o bitvector.so bitvector.c
-(load-shared-object "../../../library/C/bitvector.so")
 
-(define-ftype bitvector
-              (struct
-                [size integer-64]
-                [bits (* int)]))
+(load-shared-object "bitvector.so")
+
+
+(define-ftype bitvector int)
+
+(define-syntax check-bit
+  (syntax-rules ()
+    [(_ caller fill)
+     (unless (and (integer? fill)
+                  (or (= fill 0)
+                      (= fill 1)))
+             (error caller "fill can only be 0/1"))]))
+
 
 (define bitvector-ref
   (foreign-procedure "bitvector_ref" ((* bitvector) int) boolean))
@@ -19,23 +27,17 @@
   (let ([c-bitvector-fill!
          (foreign-procedure "bitvector_fill" ((* bitvector) int) void)])
     (lambda (v fill)
-      (unless (and (integer? fill)
-                   (or (= fill 0)
-                       (= fill 1)))
-              (error 'make-bitvector "fill can only be 0/1"))
+      (check-bit 'bitvector-fill! fill)
       (c-bitvector-fill! v fill))))
-
-(define bitvector-free!
-  (foreign-procedure "bitvector_free" ((* bitvector)) void))
 
 (define make-bitvector
   (let ([c-make-bitvector
          (foreign-procedure "make_bitvector" (int int) (* bitvector))])
     (case-lambda
-      [(n) (c-make-bitvector n 2)]
+      [(n) (c-make-bitvector n 0)]
       [(n fill)
-       (unless (and (integer? fill)
-                    (or (= fill 0)
-                        (= fill 1)))
-               (error 'make-bitvector "fill can only be 0/1"))
+       (check-bit 'make-bitvector fill)
        (c-make-bitvector n fill)])))
+
+(define free-bitvector
+  (foreign-procedure "free_bitvector" ((* bitvector)) void))

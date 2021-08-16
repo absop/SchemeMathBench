@@ -1,5 +1,3 @@
-
-
 (load "vector-mul.ss")
 
 (define odd!!1

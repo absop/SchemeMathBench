@@ -44,54 +44,57 @@
                                  (loop (cdr head)))))))))
       primes)))
 
-(define get-primes
-  (case-lambda
-    [(n) (eratosthenes n)]
-    [(n method)
-     (case method
-       [eratosthenes (eratosthenes n)]
-       [euler (euler n)])]))
+
+(define (benchmark times limit)
+  (define (bench siever)
+    (let ([result '()])
+      (for-each
+        (lambda (i) (set! result (siever limit)))
+        (iota times))
+      result))
+
+  (define-syntax bench-siever
+    (syntax-rules ()
+      [(_ siever)
+       (begin (collect)
+              (display (length (time (bench siever))))
+              (newline))]))
+
+  (printf "bench with times: ~a, limit: ~a\n" times limit)
+  (bench-siever eratosthenes)
+  (bench-siever euler))
 
 
-(define benchmark
-  (lambda (n method)
-    (printf "~a sieving:\n" method)
-    (time (set! primes (get-primes n method)))
-    (time (set! number (length primes)))
-    (printf "~a primes\n" number)))
+(benchmark 10 100000000)
 
-
-(printf "~a\n" (get-primes 100))
-(printf "~a\n" (get-primes 100 'euler))
-
-(benchmark 100000000 'eratosthenes)
-(benchmark 100000000 'euler)
 
 #!eof
-(2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97)
-(2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97)
-eratosthenes sieving:
-(time (set! primes ...))
-    11 collections
-    2.171875000s elapsed cpu time, including 0.265625000s collecting
-    2.168144300s elapsed real time, including 0.270355500s collecting
-    192190416 bytes allocated, including 982480 bytes reclaimed
-(time (set! number ...))
-    no collections
-    0.015625000s elapsed cpu time
-    0.014676700s elapsed real time
-    0 bytes allocated
-5761455 primes
-euler sieving:
-(time (set! primes ...))
-    11 collections
-    1.859375000s elapsed cpu time, including 0.343750000s collecting
-    1.899278200s elapsed real time, including 0.341237100s collecting
-    192190352 bytes allocated, including 100042432 bytes reclaimed
-(time (set! number ...))
-    no collections
-    0.015625000s elapsed cpu time
-    0.014911600s elapsed real time
-    0 bytes allocated
-5761455 primes
-[Finished in 4.4s]
+bench with times: 10, limit: 10000000
+(time (bench eratosthenes))
+    12 collections
+    2.625000000s elapsed cpu time, including 0.312500000s collecting
+    2.694848400s elapsed real time, including 0.278120700s collecting
+    206341488 bytes allocated, including 176508448 bytes reclaimed
+664579
+(time (bench euler))
+    13 collections
+    1.968750000s elapsed cpu time, including 0.218750000s collecting
+    1.951958600s elapsed real time, including 0.221721000s collecting
+    206341488 bytes allocated, including 143190560 bytes reclaimed
+664579
+[Finished in 4.9s]
+
+bench with times: 10, limit: 100000000
+(time (bench eratosthenes))
+    110 collections
+    32.453125000s elapsed cpu time, including 6.000000000s collecting
+    33.297318100s elapsed real time, including 6.014299900s collecting
+    1921904368 bytes allocated, including 1170237440 bytes reclaimed
+5761455
+(time (bench euler))
+    110 collections
+    27.500000000s elapsed cpu time, including 5.531250000s collecting
+    27.666042300s elapsed real time, including 5.716858000s collecting
+    1921903728 bytes allocated, including 2014103984 bytes reclaimed
+5761455
+[Finished in 61.3s]

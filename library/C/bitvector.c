@@ -4,46 +4,55 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <memory.h>
+#include <malloc.h>
 
-typedef struct _bitvector {
-    size_t length; /* by byte */
-    int32_t bits[1];
-} bitvector_t;
 
-#define LENGTH_BY_BYTE(n) ((n + 7) >> 3)
-#define LENGTH_BY_INT32(n) ((n + 31) >> 5)
-#define LENGTH_BY_INT64(n) ((n + 63) >> 6)
+/* default memory allocation functions with memory limitation */
+static inline size_t bitvector_usable_size(void *ptr)
+{
+#if defined(__APPLE__)
+    return malloc_size(ptr);
+#elif defined(_WIN32)
+    return _msize(ptr);
+#elif defined(EMSCRIPTEN)
+    return 0;
+#elif defined(__linux__)
+    return malloc_usable_size(ptr);
+#else
+    /* change this to `return 0;` if compilation fails */
+    return malloc_usable_size(ptr);
+#endif
+}
 
-#define BIT1AT(n) ((int32_t)1 << ((n)&31))
-#define BITVECTOR_REF(v, n) ((v)->bits[(n)>>5] & BIT1AT(n))
-#define BITVECTOR_SET(v, n) (v)->bits[(n)>>5] |= BIT1AT(n)
-#define BITVECTOR_RESET(v, n) (v)->bits[(n)>>5] &= ~BIT1AT(n)
-#define BITVECTOR_FREE(v)      \
-    do {                       \
-        free(v);               \
-        v = (bitvector_t*)0;   \
-    } while(0)
+typedef int32_t bitvector_t;
+
+
+#define LENGTH_BY_BYTE(nbits)  ((nbits +  7) >> 3)
+#define LENGTH_BY_INT32(nbits) ((nbits + 31) >> 5)
+#define LENGTH_BY_INT64(nbits) ((nbits + 63) >> 6)
+
+#define BIT1AT(i) ((int32_t)1 << ((i)&31))
+#define BITVECTOR_REF(v, i)  ((v)[(i)>>5] & BIT1AT(i))
+#define BITVECTOR_SET(v, i)   (v)[(i)>>5] |= BIT1AT(i)
+#define BITVECTOR_RESET(v, i) (v)[(i)>>5] &= ~BIT1AT(i)
 
 int bitvector_ref(bitvector_t *v, int n) { return BITVECTOR_REF(v, n); }
 void bitvector_set(bitvector_t *v, int n) { BITVECTOR_SET(v, n); }
 void bitvector_reset(bitvector_t *v, int n) { BITVECTOR_RESET(v, n); }
-void bitvector_free(bitvector_t *v) { BITVECTOR_FREE(v); }
 void bitvector_fill(bitvector_t *v, int fill)
 {
-    if (fill == 1)
-        memset(v->bits, 0xff, v->length);
-    else if (fill == 0)
-        memset(v->bits, 0, v->length);
+    size_t size = bitvector_usable_size(v);
+    memset(v, -(fill & 0x1), size);
 }
 
 bitvector_t *make_bitvector(int n, int fill)
 {
-    bitvector_t *v;
-    int length = LENGTH_BY_INT32(n) << 2;
-    v = malloc(sizeof (bitvector_t) + length);
-    v->length = length; /* by byte */
+    size_t nbytes = LENGTH_BY_INT32(n) * 4;
+    bitvector_t *v = (bitvector_t*)malloc(nbytes);
     bitvector_fill(v, fill);
     return v;
 }
+
+void free_bitvector(bitvector_t *v) { free(v); }
 
 #endif /* _BITVECTOR_C */
