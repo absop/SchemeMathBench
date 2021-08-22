@@ -66,10 +66,10 @@
   )
 
 
-(benchmark 1 1000 20000)
+(benchmark 1 1000 100000)
 
 
-#!eof
+#|
 bench with times: 1, numbers: (100000, [0-1000])
 (time (factorial-recursion))
     204 collections
@@ -142,3 +142,4 @@ factorial2: digits: 456574, pass.
 factorial3: digits: 456574, pass.
 
 [Finished in 54.1s]
+ |#

@@ -31,8 +31,9 @@
       [(n) ($ndigits n 10)]
       [(n base) ($ndigits n base)])))
 
-#!eof
+#|
 (load "for.ss")
 
 (for i in range(100):
      (printf "ndigits(~a)  = ~a\n" i (ndigits i)))
+ |#
