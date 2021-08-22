@@ -25,8 +25,8 @@
       [(v) (vector-mul v (vector-length v))]
       [(v len) (vector-mul v len)])))
 
-; 2 是一个神奇的数字，我们可以通过不断平方来实现快速幂运算
-; 通过二进制位，也可以对多个各具有不同幂次的数进行幂乘运算
+; 我们可以通过不断平方来实现快速幂运算
+; 也可以通过二进制位对多个各具有不同幂次的数进行幂乘运算
 ;   a1^7 * a2^6 * a3^5 * a4^4 * a5^3 * a6^2 * a7^1
 ;    111,   110,   101,   100,   011,   010,   001
 ; = ((a1 * a2 * a3 * a4)^2 * (a1 * a2 * a5 * a6))^2
@@ -34,8 +34,8 @@
 
 (define vector-pow-mul
   (lambda (pairs)
-    (define length (vector-length pairs))
-    (define v (make-vector length))
+    (define l (vector-length pairs))
+    (define v (make-vector l))
     (define number 0)
     (define result 1)
     (define filter-numbers-with-bit
@@ -46,8 +46,8 @@
                 (set! number (1+ number))))
         (set! number 0)
         (vector-for-each one-by-one pairs)))
-    (if (> length 0)
-        (let ([maxexp (cdr (vector-ref pairs (1- length)))])
+    (if (> l 0)
+        (let ([maxexp (cdr (vector-ref pairs (1- l)))])
           (let loop ([i (1- (integer-length maxexp))])
             (when (>= i 0)
                   (filter-numbers-with-bit i)
